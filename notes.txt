@@ -1,0 +1,2 @@
+31JAN20: Defined models for backend. Need to start implementing endpoints to test instance creation and relationships.
+01FEB20: Login/Logout/Register logic complete in backend. Need to setup basic Frontend views for this logic.
