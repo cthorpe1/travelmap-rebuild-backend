@@ -4,11 +4,11 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
 
-require("./config/passport")(passport);
+require("./config/passport");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.use(express.json()); //Parses JSON in body of requests
 app.use(express.urlencoded({ extended: false }));
 app.use(cors()); //Cross Origin Allow

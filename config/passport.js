@@ -1,12 +1,16 @@
+const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const JWTStrategy = require("passport-jwt").Strategy;
+const ExtractJWT = require("passport-jwt").ExtractJwt;
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-
 const User = require("../models/User.model");
 
-module.exports = function(passport) {
-  passport.use(
-    new LocalStrategy({ usernameField: "email" }, (email, password, done) => {
+passport.use(
+  "local",
+  new LocalStrategy(
+    { usernameField: "email", session: false },
+    (email, password, done) => {
       //Match User
       User.findOne({ email: email })
         .then(user => {
@@ -29,18 +33,42 @@ module.exports = function(passport) {
             }
           });
         })
-        .catch(err => console.log(err));
-    })
-  );
+        .catch(err => done(err));
+    }
+  )
+);
 
-  //Serialize and Deserialize User
-  passport.serializeUser((user, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser((id, done) => {
-    User.findById(id, (err, user) => {
-      done(err, user);
-    });
-  });
+const opts = {
+  jwtFromRequest: ExtractJWT.fromAuthHeaderWithScheme("JWT"),
+  secretOrKey: "jwt-secret"
 };
+
+passport.use(
+  "jwt",
+  new JWTStrategy(opts, (jwt_payload, done) => {
+    try {
+      User.findOne({ email: jwt_payload.id }).then(user => {
+        if (user) {
+          console.log("found user in db");
+          done(null, user);
+        } else {
+          console.log("user not found in db");
+          done(null, false);
+        }
+      });
+    } catch (err) {
+      done(err);
+    }
+  })
+);
+
+//Serialize and Deserialize User
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  User.findById(id, (err, user) => {
+    done(err, user);
+  });
+});

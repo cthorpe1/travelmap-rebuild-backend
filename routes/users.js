@@ -1,18 +1,32 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const passport = require("passport");
+const jwt = require("jsonwebtoken");
 let User = require("../models/User.model");
-
-//Login
-router.get("/login", (req, res) => {
-  res.send("Login Page");
-});
 
 //Login Handle
 router.post("/login", (req, res, next) => {
-  passport.authenticate("local", {
-    successRedirect: "/home",
-    failureRedirect: "/users/login"
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      res.json({ message: err });
+    }
+    if (info !== undefined) {
+      res.json({ message: info.message });
+    } else {
+      req.logIn(user, err => {
+        if (err) {
+          res.json({ message: err });
+        }
+        User.findOne({ email: user.email }).then(user => {
+          const token = jwt.sign({ id: user.email }, "jwt-secret");
+          res.status(200).json({
+            auth: true,
+            token: token,
+            message: "user found and logged in"
+          });
+        });
+      });
+    }
   })(req, res, next);
 });
 
@@ -20,11 +34,6 @@ router.post("/login", (req, res, next) => {
 router.get("/logout", (req, res) => {
   req.logout();
   res.redirect("/users/login");
-});
-
-//Register
-router.get("/register", (req, res) => {
-  res.send("Register Page");
 });
 
 //Register Handle
@@ -45,32 +54,39 @@ router.post("/register", (req, res) => {
     errors.push({ message: "Password must be at least 8 characters" });
 
   if (errors.length > 0) {
-    //Send errors back to client
+    res.json({ errors: errors });
+    console.log(errors);
   } else {
     //Look up existing user
     User.findOne({ email: email }).then(user => {
-      if (user) errors.push({ message: "That user already exists" });
-      else {
+      if (user) {
+        errors.push({ message: "That user already exists" });
+        res.json({ errors: errors });
+      } else {
         const newUser = new User({
           name,
           email,
           password
         });
-
         //Hash Password
         //Generate Salt
         bcrypt.genSalt(10, (err, salt) => {
           //Hash
           bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) errors.push({ message: err });
-            else {
+            if (err) {
+              errors.push({ message: err });
+              res.json({ errors: errors });
+            } else {
               newUser.password = hash;
               newUser
                 .save()
                 .then(user => {
                   res.redirect("/users/login");
                 })
-                .catch(err => errors.push({ message: err }));
+                .catch(err => {
+                  errors.push({ message: err });
+                  res.json({ errors: errors });
+                });
             }
           });
         });
