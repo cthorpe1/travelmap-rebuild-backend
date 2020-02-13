@@ -1,39 +1,56 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
-const passport = require("passport");
 const jwt = require("jsonwebtoken");
-let User = require("../models/User.model");
+const auth = require("../middleware/auth");
+require("dotenv").config();
+
+const User = require("../models/User.model");
 
 //Login Handle
-router.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      res.json({ message: err });
-    }
-    if (info !== undefined) {
-      res.json({ message: info.message });
-    } else {
-      req.logIn(user, err => {
-        if (err) {
-          res.json({ message: err });
-        }
-        User.findOne({ email: user.email }).then(user => {
-          const token = jwt.sign({ id: user.email }, "jwt-secret");
-          res.status(200).json({
-            auth: true,
-            token: token,
-            message: "user found and logged in"
-          });
-        });
-      });
-    }
-  })(req, res, next);
-});
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  let errors = [];
 
-//Logout
-router.get("/logout", (req, res) => {
-  req.logout();
-  res.redirect("/users/login");
+  //Check required fields
+  if (!email || !password)
+    errors.push({ message: "Please fill in all fields" });
+
+  if (errors.length > 0) {
+    res.json({ errors: errors });
+    console.log(errors);
+  } else {
+    //Look up existing user
+    User.findOne({ email: email }).then(user => {
+      if (!user) {
+        errors.push({ message: "That user doesn't exist" });
+        res.json({ errors: errors });
+      } else {
+        bcrypt.compare(password, user.password).then(isMatch => {
+          if (!isMatch)
+            return res.status(400).json({ message: "Invalid credentials" });
+
+          jwt.sign(
+            { id: user.id },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: 3600
+            },
+            (err, token) => {
+              if (err) throw err;
+              res.json({
+                token,
+                user: {
+                  id: user.id,
+                  name: user.name,
+                  email: user.email
+                }
+              });
+            }
+          );
+        });
+      }
+    });
+  }
 });
 
 //Register Handle
@@ -58,7 +75,7 @@ router.post("/register", (req, res) => {
     console.log(errors);
   } else {
     //Look up existing user
-    User.findOne({ email: email }).then(user => {
+    User.findOne({ email }).then(user => {
       if (user) {
         errors.push({ message: "That user already exists" });
         res.json({ errors: errors });
@@ -68,6 +85,7 @@ router.post("/register", (req, res) => {
           email,
           password
         });
+
         //Hash Password
         //Generate Salt
         bcrypt.genSalt(10, (err, salt) => {
@@ -81,7 +99,24 @@ router.post("/register", (req, res) => {
               newUser
                 .save()
                 .then(user => {
-                  res.redirect("/users/login");
+                  jwt.sign(
+                    { id: user.id },
+                    process.env.JWT_SECRET,
+                    {
+                      expiresIn: 3600
+                    },
+                    (err, token) => {
+                      if (err) throw err;
+                      res.json({
+                        token,
+                        user: {
+                          id: user.id,
+                          name: user.name,
+                          email: user.email
+                        }
+                      });
+                    }
+                  );
                 })
                 .catch(err => {
                   errors.push({ message: err });
@@ -93,6 +128,15 @@ router.post("/register", (req, res) => {
       }
     });
   }
+});
+
+//Verify User Data
+router.get("/verify", auth, (req, res) => {
+  User.findById(req.user.id)
+    .select("-password")
+    .then(user => {
+      res.json(user);
+    });
 });
 
 module.exports = router;
