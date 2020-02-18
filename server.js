@@ -25,6 +25,7 @@ connection.once("open", () => {
 //Routes
 app.use("/", require("./routes/index"));
 app.use("/users", require("./routes/users"));
+app.use("/markers", require("./routes/markers"));
 
 app.listen(PORT, () => {
   console.log(`Server started up on ${PORT}...`);
