@@ -6,17 +6,23 @@ const containerSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  coordinates: {
+    type: Map,
+    of: Number
+  },
   ownedBy: {
-    type: mongoose.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
     ref: "User"
   },
   parentContainer: {
-    type: mongoose.ObjectId,
-    ref: "Container"
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Container",
+    default: null
   },
   subContainers: [
     {
-      type: mongoose.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Container"
     }
   ],

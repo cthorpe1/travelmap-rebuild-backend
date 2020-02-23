@@ -20,12 +20,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 8
     },
-    containers: [
-      {
-        type: mongoose.ObjectId,
-        ref: "Container"
-      }
-    ]
   },
   {
     timestamps: true
