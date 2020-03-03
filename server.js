@@ -18,9 +18,14 @@ mongoose.connect(uri, {
   useUnifiedTopology: true
 });
 const connection = mongoose.connection;
-connection.once("open", () => {
-  console.log("MongoDB connection established successfully");
-});
+try {
+  connection.once("open", () => {
+    console.log("MongoDB connection established successfully");
+  });
+} catch(e) {
+  console.log(e);
+}
+
 
 //Routes
 app.use("/", require("./routes/index"));
