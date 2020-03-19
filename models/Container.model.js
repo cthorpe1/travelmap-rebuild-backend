@@ -15,10 +15,9 @@ const containerSchema = new mongoose.Schema({
     required: true,
     ref: "User"
   },
-  parentContainer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Container",
-    default: null
+  isTopLevel: {
+    type: Boolean,
+    default: false
   },
   subContainers: [
     {
