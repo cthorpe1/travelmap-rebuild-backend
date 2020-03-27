@@ -57,4 +57,16 @@ router.post("/add/sub-container", auth, (req, res) => {
     });
 });
 
+//Get Subcontainers for Current Parent
+router.get("/:markerId", auth, (req, res) => {
+  Container.findById(req.params.markerId)
+    .then(container => {
+      let subContainers = container.subContainers;
+      Container.find({ _id: { $in: subContainers } }).then(results => {
+        res.status(200).json(results);
+      });
+    })
+    .catch(err => res.status(400).json(err));
+});
+
 module.exports = router;
