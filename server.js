@@ -15,17 +15,17 @@ const uri = process.env.ATLAS_URI;
 mongoose.connect(uri, {
   useNewUrlParser: true,
   useCreateIndex: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  useFindAndModify: false
 });
 const connection = mongoose.connection;
 try {
   connection.once("open", () => {
     console.log("MongoDB connection established successfully");
   });
-} catch(e) {
+} catch (e) {
   console.log(e);
 }
-
 
 //Routes
 app.use("/", require("./routes/index"));

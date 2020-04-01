@@ -69,4 +69,17 @@ router.get("/:markerId", auth, (req, res) => {
     .catch(err => res.status(400).json(err));
 });
 
+router.post("/:markerId/remove-sub", auth, (req, res) => {
+  Container.findOneAndUpdate(
+    req.body.currentParent,
+    { $pull: { subContainers: req.body.containerToDelete } },
+    (err, data) => {
+      if (err) {
+        res.status(400).json(err);
+      }
+      res.status(200).json({ id: data._id });
+    }
+  );
+});
+
 module.exports = router;
