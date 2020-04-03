@@ -44,6 +44,7 @@ router.post("/add/sub-container", auth, (req, res) => {
     .then(container => {
       const newSubContainer = new Container({
         name: req.body.name,
+        description: req.body.description,
         ownedBy: req.user.id
       });
       newSubContainer.save().then(subContainer => {
@@ -69,6 +70,7 @@ router.get("/:markerId", auth, (req, res) => {
     .catch(err => res.status(400).json(err));
 });
 
+//Deletes a subcontainer
 router.post("/:markerId/remove-sub", auth, (req, res) => {
   Container.findOneAndUpdate(
     req.body.currentParent,
@@ -77,7 +79,9 @@ router.post("/:markerId/remove-sub", auth, (req, res) => {
       if (err) {
         res.status(400).json(err);
       }
-      res.status(200).json({ id: data._id });
+      Container.deleteOne({ _id: req.body.containerToDelete }, err => {
+        res.status(200).json({ id: data._id });
+      });
     }
   );
 });

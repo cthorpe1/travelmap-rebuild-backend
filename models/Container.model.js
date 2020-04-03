@@ -6,6 +6,11 @@ const containerSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  description: {
+    type: String,
+    trim: true,
+    default: "No description entered..."
+  },
   coordinates: {
     type: Map,
     of: Number
