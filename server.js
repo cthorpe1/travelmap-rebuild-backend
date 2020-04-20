@@ -28,9 +28,9 @@ try {
 }
 
 //Routes
-app.use("/", require("./routes/index"));
 app.use("/users", require("./routes/users"));
 app.use("/markers", require("./routes/markers"));
+app.use("/photos", require("./routes/photos"));
 
 app.listen(PORT, () => {
   console.log(`Server started up on ${PORT}...`);
