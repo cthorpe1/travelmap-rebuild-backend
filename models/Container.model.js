@@ -30,11 +30,7 @@ const containerSchema = new mongoose.Schema({
       ref: "Container"
     }
   ],
-  Photos: [
-    {
-      url: String
-    }
-  ]
+  photos: [String]
 });
 
 const Container = mongoose.model("Container", containerSchema);
